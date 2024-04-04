@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 using namespace std;
 
 void instruction() {
@@ -13,31 +13,28 @@ void instruction() {
     cout << "Для завершения работы программы, введите 0\n\n";
 }
 
-template <typename T1, typename T2, typename T3>
 struct Info {
-    T1 city;
-    T2 region;
-    T3 people;
+    string city = "";
+    string region = "";
+    int people = 0;
 };
 
-template <typename T1, typename T2, typename T3>
+template <typename T>
 struct Node {
-    Info <T1, T2, T3> info;
+    T info;
     Node* next = nullptr;
     Node* prev = nullptr;
 };
 
-template <typename T1, typename T2, typename T3>
+template <typename T>
 struct List {
     int counting = 0;
-    Node< T1, T2, T3 >* first = nullptr;
-    Node< T1, T2, T3 >* last = nullptr;
+    Node<T>* first = nullptr;
+    Node<T>* last = nullptr;
 
-    void add(Info<T1, T2, T3> T) {
-        Node< T1, T2, T3 >* node = new Node<T1, T2, T3>();
-        node->info.city = T.city;
-        node->info.region = T.region;
-        node->info.people = T.people;
+    void add(T info) {
+        Node<T>* node = new Node<T>();
+        node->info = info;
         if (counting == 0) {
             first = node;
             last = node;
@@ -50,18 +47,16 @@ struct List {
         counting++;
     }
 
-    void insert(int index, Info<T1, T2, T3> T) {
+    void insert(int index, T info) {
         if (index < 0 || index > counting) { return; }
         if (index == counting) {
-            add(T);
+            add(info);
             return;
         }
-        Node< T1, T2, T3 >* now = first;
+        Node<T>* now = first;
         for (int i = 0; i < index; i++) { now = now->next; }
-        Node< T1, T2, T3 >* node = new Node<T1, T2, T3>();
-        node->info.city = T.city;
-        node->info.region = T.region;
-        node->info.people = T.people;
+        Node<T>* node = new Node<T>();
+        node->info = info;
         node->prev = now->prev;
         now->prev = node;
         node->next = now;
@@ -72,7 +67,7 @@ struct List {
 
     void removeAt(int index) {
         if (index < 0 || index >= counting) { return; }
-        Node< T1, T2, T3 >* del = first;
+        Node<T>* del = first;
         for (int i = 0; i < index; i++) { del = del->next; }
         if (last == first) {
             clear();
@@ -94,15 +89,12 @@ struct List {
         counting--;
     }
 
-    Info<T1, T2, T3> elementAt(int index) {
+    T elementAt(int index) {
         if (index < 0 || index >= counting) {
-            Info<string, string, int> T;
-            T.city = "Ошибка!";
-            T.region = "Ошибка!";
-            T.people = 0;
-            return T;
+            Info error;
+            return error;
         }
-        Node<T1, T2, T3>* node = first;
+        Node<T>* node = first;
         for (int i = 0; i < index; i++) { node = node->next; }
         return node->info;
     }
@@ -112,125 +104,126 @@ struct List {
     void clear() {
         int kol = counting;
         for (int i = 0; i < kol; i++) {
-            Node<T1, T2, T3>* del = first;
+            Node<T>* del = first;
             first = first->next;
             delete del;
         }
         last = nullptr;
         counting = 0;
     }
-
-    void removeRegion(string reg) {
-        Node<T1, T2, T3>* node = first;
-        int kol = counting;
-        for (int i = 0; i < kol; i++) {
-            if (node->info.region == reg) {
-                Node<T1, T2, T3>* del = node;
-                node = node->next;
-                if (del == first) {
-                    if (first->next == nullptr) {
-                        clear();
-                        break;
-                    }
-                    first = first->next;
-                    first->prev = nullptr;
-                }
-                else if (del == last) {
-                    last = last->prev;
-                    last->next = nullptr;
-                }
-                else {
-                    node->prev = del->prev;
-                    del->prev->next = node;
-                }
-                delete del;
-                counting--;
-            }
-            else { node = node->next; }
-        }
-    }
-    
-    void sortPeople() {
-        List listcopy, list;
-        Node<T1, T2, T3>* copy = first;
-        for (int i = 0; i < counting; i++) {
-            listcopy.add(copy->info);
-            copy = copy->next;
-        }
-
-        Node<T1, T2, T3>* node = listcopy.first;
-        while (node != nullptr) {
-            Node<T1, T2, T3>* now = node->next;
-            for (int i = 0; i < listcopy.counting - 1; i++) {
-                if (node->info.region == now->info.region) {
-                    node->info.people += now->info.people;
-                    now = now->next;
-                    listcopy.removeAt(i + 1);
-                    i--;
-                }
-                else {
-                    now = now->next;
-                }
-            }
-            list.add(node->info);
-            node = node->next;
-            listcopy.removeAt(0);
-        }
-        
-        int point = 1;
-        while (point != 0) {
-            point = 0;
-            Node<T1, T2, T3>* element = list.first;
-            for (int i = 0; i < list.counting - 1; i++) {
-                if (element->info.people < element->next->info.people) {
-                    swap(element->info, element->next->info);
-                    point++;
-                }
-                element = element->next;
-            }
-        }
-
-        copy = list.first;
-        for (int i = 0; i < list.counting; i++) {
-            cout << copy->info.region << endl;
-            copy = copy->next;
-        }
-    }
 };
 
-Info<string, string, int> push() {
-    Info <string, string, int> T;
-    cout << "Введите город: ";
-    cin >> T.city;
-    cout << "Введите регион: ";
-    cin >> T.region;
-    cout << "Введите количество населения: ";
-    cin >> T.people;
-    return T;
+void removeRegion(string reg, List<Info> &list) {
+    Node<Info>* node = list.first;
+    int kol = list.counting;
+    for (int i = 0; i < kol; i++) {
+        if (node->info.region == reg) {
+            Node<Info>* del = node;
+            node = node->next;
+            if (del == list.first) {
+                if (list.first->next == nullptr) {
+                    list.clear();
+                    break;
+                }
+                list.first = list.first->next;
+                list.first->prev = nullptr;
+            }
+            else if (del == list.last) {
+                list.last = list.last->prev;
+                list.last->next = nullptr;
+            }
+            else {
+                node->prev = del->prev;
+                del->prev->next = node;
+            }
+            delete del;
+            list.counting--;
+        }
+        else { node = node->next; }
+    }
 }
-void out(Info <string, string, int> T) {
-    cout << "Город: " << T.city << "\n";
-    cout << "Регион: " << T.region << "\n";
-    cout << "Население: " << T.people << "\n";
+
+void sortPeople(List<Info> startlist) {
+    List<Info> listcopy, list;
+    Node<Info>* copy = startlist.first;
+    for (int i = 0; i < startlist.counting; i++) {
+        listcopy.add(copy->info);
+        copy = copy->next;
+    }
+
+    Node<Info>* node = listcopy.first;
+    while (node != nullptr) {
+        Node<Info>* now = node->next;
+        for (int i = 0; i < listcopy.counting - 1; i++) {
+            if (node->info.region == now->info.region) {
+                node->info.people += now->info.people;
+                now = now->next;
+                listcopy.removeAt(i + 1);
+                i--;
+            }
+            else {
+                now = now->next;
+            }
+        }
+        list.add(node->info);
+        node = node->next;
+        listcopy.removeAt(0);
+    }
+
+    int point = 1;
+    while (point != 0) {
+        point = 0;
+        Node<Info>* element = list.first;
+        for (int i = 0; i < list.counting - 1; i++) {
+            if (element->info.people < element->next->info.people) {
+                swap(element->info, element->next->info);
+                point++;
+            }
+            element = element->next;
+        }
+    }
+
+    copy = list.first;
+    for (int i = 0; i < list.counting; i++) {
+        cout << copy->info.region << endl;
+        copy = copy->next;
+    }
+}
+
+Info put() {
+    Info info;
+    cout << "Введите город: ";
+    cin >> info.city;
+    cout << "Введите регион: ";
+    cin >> info.region;
+    cout << "Введите население: ";
+    cin >> info.people;
+    return info;
+}
+
+void out(Info info) {
+    cout << "Город: " << info.city << "\n";
+    cout << "Регион: " << info.region << "\n";
+    cout << "Население: " << info.people << "\n";
 }
 
 int main() {
     setlocale(LC_ALL, "ru");
     instruction();
-    List <string, string, int> list;
+    List<Info> list;
     while (true) {
         cout << "\nВведите команду: ";
         int parameter;
-        string reg, c;
+        string reg; 
         cin >> parameter;
         switch (parameter) {
         case 1:
-            list.add(push());
+            list.add(put());
             break;
         case 2:
             cout << "Введите индекс: ";
             cin >> parameter;
-            list.insert(parameter, push());
+            list.insert(parameter, put());
             break;
         case 3:
             cout << "Введите индекс: ";
@@ -249,11 +242,12 @@ int main() {
             list.clear();
             break;
         case 7:
-            list.sortPeople();
+            sortPeople(list);
             break;
         case 8:
+            cout << "Введите регион: ";
             cin >> reg;
-            list.removeRegion(reg);
+            removeRegion(reg, list);
             break;
         case 0:
             return 0;
