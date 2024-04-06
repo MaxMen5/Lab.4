@@ -91,7 +91,7 @@ struct List {
 
     T elementAt(int index) {
         if (index < 0 || index >= counting) {
-            Info error;
+            T error;
             return error;
         }
         Node<T>* node = first;
@@ -208,7 +208,7 @@ void out(Info info) {
 }
 
 int main() {
-    setlocale(LC_ALL, "ru");
+    system("chcp 1251>NULL");
     instruction();
     List<Info> list;
     while (true) {
