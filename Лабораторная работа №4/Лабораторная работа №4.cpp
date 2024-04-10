@@ -29,8 +29,16 @@ struct Node {
 template <typename T>
 struct List {
     int counting = 0;
+    int position = 0;
+    Node<T>* now = nullptr;
     Node<T>* first = nullptr;
     Node<T>* last = nullptr;
+
+    void toIndex(int index) {
+        if (index > position) { for (int i = 0; i < index - position; i++) { now = now->next; } }
+        else { for (int i = 0; i < position - index; i++) { now = now->prev; } }
+        position = index;
+    }
 
     void add(T info) {
         Node<T>* node = new Node<T>();
@@ -38,6 +46,7 @@ struct List {
         if (counting == 0) {
             first = node;
             last = node;
+            now = node;
         }
         else {
             node->prev = last;
@@ -48,13 +57,12 @@ struct List {
     }
 
     void insert(int index, T info) {
-        if (index < 0 || index > counting) { return; }
+        if (index < 0 || index > counting) { throw 0; }
         if (index == counting) {
             add(info);
             return;
         }
-        Node<T>* now = first;
-        for (int i = 0; i < index; i++) { now = now->next; }
+        toIndex(index);
         Node<T>* node = new Node<T>();
         node->info = info;
         node->prev = now->prev;
@@ -63,12 +71,13 @@ struct List {
         if (node->prev != nullptr) { node->prev->next = node; }
         else { first = node; }
         counting++;
+        position++;
     }
 
     void removeAt(int index) {
-        if (index < 0 || index >= counting) { return; }
-        Node<T>* del = first;
-        for (int i = 0; i < index; i++) { del = del->next; }
+        if (index < 0 || index >= counting) { throw 0; }
+        toIndex(index);
+        Node<T>* del = now;
         if (last == first) {
             clear();
             return;
@@ -76,12 +85,16 @@ struct List {
         if (del == last) {
             last = last->prev;
             last->next = nullptr;
+            now = last;
+            position--;
         }
         else if (del == first) {
             first = first->next;
             first->prev = nullptr;
+            now = first;
         }
         else {
+            now = now->next;
             del->next->prev = del->prev;
             del->prev->next = del->next;
         }
@@ -90,13 +103,9 @@ struct List {
     }
 
     T elementAt(int index) {
-        if (index < 0 || index >= counting) {
-            T error;
-            return error;
-        }
-        Node<T>* node = first;
-        for (int i = 0; i < index; i++) { node = node->next; }
-        return node->info;
+        if (index < 0 || index >= counting) { throw 0; }
+        toIndex(index);
+        return now->info;
     }
 
     int count() { return counting; }
@@ -109,85 +118,52 @@ struct List {
             delete del;
         }
         last = nullptr;
+        now = nullptr;
+        position = 0;
         counting = 0;
+    }
+
+    void output() {
+        Node<T>* node = first;
+        for (int i = 0; i < counting; i++) {
+            cout << "Город: " << node->info.city << "\n";
+            cout << "Регион: " << node->info.region << "\n";
+            cout << "Население: " << node->info.people << "\n\n";
+            node = node->next;
+        }
     }
 };
 
 void removeRegion(string reg, List<Info> &list) {
-    Node<Info>* node = list.first;
-    int kol = list.counting;
-    for (int i = 0; i < kol; i++) {
-        if (node->info.region == reg) {
-            Node<Info>* del = node;
-            node = node->next;
-            if (del == list.first) {
-                if (list.first->next == nullptr) {
-                    list.clear();
-                    break;
-                }
-                list.first = list.first->next;
-                list.first->prev = nullptr;
-            }
-            else if (del == list.last) {
-                list.last = list.last->prev;
-                list.last->next = nullptr;
-            }
-            else {
-                node->prev = del->prev;
-                del->prev->next = node;
-            }
-            delete del;
-            list.counting--;
-        }
-        else { node = node->next; }
+    for (int i = 0; i < list.count(); i++) { 
+        if (list.elementAt(i).region == reg) { 
+            list.removeAt(i); 
+            i--;
+        } 
     }
 }
 
-void sortPeople(List<Info> startlist) {
-    List<Info> listcopy, list;
-    Node<Info>* copy = startlist.first;
-    for (int i = 0; i < startlist.counting; i++) {
-        listcopy.add(copy->info);
-        copy = copy->next;
-    }
-
-    Node<Info>* node = listcopy.first;
-    while (node != nullptr) {
-        Node<Info>* now = node->next;
-        for (int i = 0; i < listcopy.counting - 1; i++) {
-            if (node->info.region == now->info.region) {
-                node->info.people += now->info.people;
-                now = now->next;
-                listcopy.removeAt(i + 1);
-                i--;
-            }
-            else {
-                now = now->next;
+void sortPeople(List<Info> list) {
+    List<Info> listreg;
+    for (int i = 0; i < list.count(); i++) {
+        bool inList = false;
+        for (int j = 0; j < listreg.count(); j++) {
+            if (listreg.elementAt(j).region == list.elementAt(i).region) {
+                listreg.now->info.people += list.elementAt(i).people;
+                inList = true;
+                break;
             }
         }
-        list.add(node->info);
-        node = node->next;
-        listcopy.removeAt(0);
+        if (!inList) { listreg.add(list.elementAt(i)); }
     }
-
-    int point = 1;
-    while (point != 0) {
-        point = 0;
-        Node<Info>* element = list.first;
-        for (int i = 0; i < list.counting - 1; i++) {
-            if (element->info.people < element->next->info.people) {
-                swap(element->info, element->next->info);
-                point++;
+    for (int i = 0; i < listreg.count(); i++) {
+        for (int j = 0; j < listreg.count() - 1; j++) {
+            if (listreg.elementAt(j).people < listreg.elementAt(j + 1).people) {
+                swap(listreg.now->prev->info, listreg.now->info);
             }
-            element = element->next;
         }
     }
-
-    copy = list.first;
-    for (int i = 0; i < list.counting; i++) {
-        cout << copy->info.region << endl;
-        copy = copy->next;
-    }
+    for (int i = 0; i < listreg.count(); i++) { cout << listreg.elementAt(i).region << endl; }
 }
 
 Info put() {
@@ -211,48 +187,54 @@ int main() {
     system("chcp 1251>NULL");
     instruction();
     List<Info> list;
-    while (true) {
-        cout << "\nВведите команду: ";
-        int parameter;
-        string reg; 
-        cin >> parameter;
-        switch (parameter) {
-        case 1:
-            list.add(put());
-            break;
-        case 2:
-            cout << "Введите индекс: ";
-            cin >> parameter;
-            list.insert(parameter, put());
-            break;
-        case 3:
-            cout << "Введите индекс: ";
-            cin >> parameter;
-            list.removeAt(parameter);
-            break;
-        case 4:
-            cout << "Введите индекс: ";
-            cin >> parameter;
-            out(list.elementAt(parameter));
-            break;
-        case 5:
-            cout << "Количество элементов: " << list.count();
-            break;
-        case 6:
-            list.clear();
-            break;
-        case 7:
-            sortPeople(list);
-            break;
-        case 8:
-            cout << "Введите регион: ";
-            cin >> reg;
-            removeRegion(reg, list);
-            break;
-        case 0:
-            return 0;
-        default:
-            cout << "Неизвестная команда!";
+        while (true) {
+            try {
+                cout << "\nВведите команду: ";
+                int parameter;
+                string reg;
+                cin >> parameter;
+                switch (parameter) {
+                case 1:
+                    list.add(put());
+                    break;
+                case 2:
+                    cout << "Введите индекс: ";
+                    cin >> parameter;
+                    list.insert(parameter, put());
+                    break;
+                case 3:
+                    cout << "Введите индекс: ";
+                    cin >> parameter;
+                    list.removeAt(parameter);
+                    break;
+                case 4:
+                    cout << "Введите индекс: ";
+                    cin >> parameter;
+                    out(list.elementAt(parameter));
+                    break;
+                case 5:
+                    cout << "Количество элементов: " << list.count();
+                    break;
+                case 6:
+                    list.clear();
+                    break;
+                case 7:
+                    sortPeople(list);
+                    break;
+                case 8:
+                    cout << "Введите регион: ";
+                    cin >> reg;
+                    removeRegion(reg, list);
+                    break;
+                case 10:
+                    list.output();
+                    break;
+                case 0:
+                    return 0;
+                default:
+                    cout << "Неизвестная команда!";
+                }
+            }
+            catch (int error) { if (error == 0) { cout << "Введен некорректный индекс!\n"; } }
         }
-    }
 }
