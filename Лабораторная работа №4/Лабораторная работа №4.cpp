@@ -35,6 +35,14 @@ struct List {
     Node<T>* last = nullptr;
 
     void toIndex(int index) {
+        if (abs(index - position) > (counting - 1 - index)) {
+            now = last;
+            position = counting - 1;
+        }
+        if (abs(index - position) > index) {
+            now = first;
+            position = 0;
+        }
         if (index > position) { for (int i = 0; i < index - position; i++) { now = now->next; } }
         else { for (int i = 0; i < position - index; i++) { now = now->prev; } }
         position = index;
@@ -121,16 +129,6 @@ struct List {
         now = nullptr;
         position = 0;
         counting = 0;
-    }
-
-    void output() {
-        Node<T>* node = first;
-        for (int i = 0; i < counting; i++) {
-            cout << "Город: " << node->info.city << "\n";
-            cout << "Регион: " << node->info.region << "\n";
-            cout << "Население: " << node->info.people << "\n\n";
-            node = node->next;
-        }
     }
 };
 
@@ -225,9 +223,6 @@ int main() {
                     cout << "Введите регион: ";
                     cin >> reg;
                     removeRegion(reg, list);
-                    break;
-                case 10:
-                    list.output();
                     break;
                 case 0:
                     return 0;
